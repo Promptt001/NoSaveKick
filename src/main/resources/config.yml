@@ -1,0 +1,26 @@
+# NoSaveKick configuration
+#
+# This plugin works by:
+#  1) Backing up the current on-disk playerdata/<uuid>.dat
+#  2) Kicking the player (which causes the server to save)
+#  3) Restoring (or deleting) the playerdata file after a short delay
+
+rollback:
+  # How long to wait after the kick before attempting to restore/delete the playerdata file.
+  # 20 ticks = 1 second.
+  delay-ticks: 5
+
+  # Restore/delete runs asynchronously and may fail briefly if the server is still writing the file.
+  # These settings control simple retry behavior.
+  max-retries: 5
+  retry-delay-ticks: 5
+
+  # Folder (inside the plugin's data folder) used to store short-lived backups.
+  backup-directory: rollback
+
+messages:
+  no-permission: "&cYou do not have permission."
+  usage: "&cUsage: /nosavekick <player> [reason]"
+  player-not-found: "&cPlayer not found (must be online)."
+  default-reason: "Connection reset by peer."
+  kicked: "&aKicked {player} without saving."

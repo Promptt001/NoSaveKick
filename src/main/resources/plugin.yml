@@ -1,0 +1,14 @@
+name: NoSaveKick
+version: 1.0
+main: com.yourname.nosavekick.NoSaveKick
+api-version: 1.21
+commands:
+  nosavekick:
+    description: Kicks a player and reverts their data to the last disk save.
+    usage: /nosavekick <player> [reason]
+    permission: nosavekick.use
+
+permissions:
+  nosavekick.use:
+    description: Allows use of /nosavekick
+    default: op
