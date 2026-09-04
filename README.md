@@ -20,9 +20,9 @@ Net effect: after the kick, the player’s vanilla `.dat` file is reverted to th
 
 ## Requirements
 
-- **Server:** Paper or Spigot compatible with **Minecraft 1.21** (API version in `plugin.yml` is `1.21`).
-- **Java:** **Java 21** (project is compiled for Java 21).
-- **Build tool (optional):** Maven
+- **Server:** Paper **26.2** (calendar versioning YY.N; API version in `plugin.yml` is `26.2`).
+- **Java:** **Java 25** (project is compiled for Java 25).
+- **Build tool:** Gradle
 
 ---
 
@@ -43,13 +43,13 @@ On first start, the plugin will create:
 ```bash
 git clone <your repo url>
 cd NoSaveKick
-mvn -U clean package
+gradle build
 ```
 
 The output JAR will be in:
 
 ```
-target/NoSaveKick-1.0.jar
+app/build/libs/nosavekick-1.0.0.jar
 ```
 
 Copy that file to your server’s `plugins/` folder.
@@ -126,7 +126,7 @@ All messages support `&` color codes. `{player}` is replaced with the player’s
 
 The plugin’s entire behavior is implemented in one class:
 
-- `com.yourname.nosavekick.NoSaveKick`
+- `dev.promptt.nosavekick.NoSaveKick`
 
 The core sequence is:
 
@@ -196,19 +196,18 @@ Possible causes:
 
 ### Package / coordinates
 
-This project uses placeholder coordinates:
+The project uses the `dev.promptt` namespace (matching MobCleaner):
 
-- `groupId`: `com.yourname`
-- package: `com.yourname.nosavekick`
-
-You should change these to your real namespace before publishing.
+- `group`: `dev.promptt` (Gradle)
+- package: `dev.promptt.nosavekick`
 
 ### Recommended repo hygiene
 
 If you put this on GitHub, consider adding a `.gitignore` that excludes build output:
 
 ```gitignore
-/target/
+.gradle/
+build/
 *.iml
 .idea/
 .classpath

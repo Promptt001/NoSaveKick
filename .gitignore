@@ -1,17 +1,11 @@
-# Maven
-/target/
-
-# IntelliJ
+.gradle
+build/
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+*.log
+.DS_Store
 .idea/
 *.iml
-
-# Eclipse
 .classpath
 .project
 .settings/
-
-# macOS
-.DS_Store
-
-# Logs
-*.log

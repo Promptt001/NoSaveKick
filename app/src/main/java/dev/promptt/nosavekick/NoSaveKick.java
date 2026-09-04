@@ -1,7 +1,9 @@
-package com.yourname.nosavekick;
+package dev.promptt.nosavekick;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -68,19 +70,19 @@ public final class NoSaveKick extends JavaPlugin implements CommandExecutor {
             @NotNull String[] args
     ) {
         if (!sender.hasPermission(PERMISSION_USE)) {
-            sender.sendMessage(color(getConfig().getString("messages.no-permission", "&cYou do not have permission.")));
+            sender.sendMessage(component(getConfig().getString("messages.no-permission", "&cYou do not have permission.")));
             return true;
         }
 
         if (args.length < 1) {
-            sender.sendMessage(color(getConfig().getString("messages.usage", "&cUsage: /nosavekick <player> [reason]")));
+            sender.sendMessage(component(getConfig().getString("messages.usage", "&cUsage: /nosavekick <player> [reason]")));
             return true;
         }
 
         // Only online players can be kicked via this command.
         Player target = Bukkit.getPlayer(args[0]);
         if (target == null) {
-            sender.sendMessage(color(getConfig().getString("messages.player-not-found", "&cPlayer not found (must be online).")));
+            sender.sendMessage(component(getConfig().getString("messages.player-not-found", "&cPlayer not found (must be online).")));
             return true;
         }
 
@@ -95,7 +97,7 @@ public final class NoSaveKick extends JavaPlugin implements CommandExecutor {
 
         String feedback = getConfig().getString("messages.kicked", "&aKicked {player} without saving.")
                 .replace("{player}", target.getName());
-        sender.sendMessage(color(feedback));
+        sender.sendMessage(component(feedback));
         return true;
     }
 
@@ -141,7 +143,7 @@ public final class NoSaveKick extends JavaPlugin implements CommandExecutor {
         }
 
         // 2) KICK: server will save player state during disconnect.
-        player.kickPlayer(color(reason));
+        player.kick(component(reason));
 
         // 3) RESTORE: after a short delay, overwrite the saved file with the backup.
         int delayTicks = getConfig().getInt("rollback.delay-ticks", 5);
@@ -214,9 +216,9 @@ public final class NoSaveKick extends JavaPlugin implements CommandExecutor {
     }
 
     /**
-     * Translates {@code &}-color codes into Minecraft color codes.
+     * Converts a legacy {@code &}-color-coded config string into an Adventure {@link Component}.
      */
-    private static String color(@NotNull String input) {
-        return ChatColor.translateAlternateColorCodes('&', input);
+    private static Component component(@NotNull String input) {
+        return LegacyComponentSerializer.legacyAmpersand().deserialize(input);
     }
 }

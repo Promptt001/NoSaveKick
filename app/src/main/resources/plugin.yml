@@ -1,7 +1,7 @@
 name: NoSaveKick
-version: 1.0
-main: com.yourname.nosavekick.NoSaveKick
-api-version: 1.21
+version: 1.1.0-beta.1
+main: dev.promptt.nosavekick.NoSaveKick
+api-version: '26.2'
 commands:
   nosavekick:
     description: Kicks a player and reverts their data to the last disk save.
