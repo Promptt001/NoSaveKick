@@ -1,5 +1,5 @@
 name: NoSaveKick
-version: 1.1.0-beta.1
+version: 1.1.0-beta.2
 main: dev.promptt.nosavekick.NoSaveKick
 api-version: '26.2'
 commands:

@@ -10,9 +10,9 @@ Minecraft servers normally save a player’s data (inventory, location, health, 
 
 This plugin does **not** stop the server from writing the player’s data during disconnect (that part is hard-coded in the server). Instead, it:
 
-1. **Backs up** the current on-disk file (`playerdata/<uuid>.dat`) *before* the kick.
+1. **Backs up** the current on-disk files (`<uuid>.dat` and `<uuid>.dat_old`) *before* the kick.
 2. **Kicks** the player (server writes the current in-memory state to disk).
-3. **Restores** the on-disk file from the backup (rolling back that save).
+3. **Restores** the on-disk files from the backups (rolling back that save).
 
 Net effect: after the kick, the player’s vanilla `.dat` file is reverted to the last disk state that existed before the kick.
 
@@ -131,13 +131,19 @@ The plugin’s entire behavior is implemented in one class:
 The core sequence is:
 
 1. Resolve the “main” overworld folder (first loaded world with `World.Environment.NORMAL`).
-2. Build the path: `<worldFolder>/playerdata/<uuid>.dat`.
-3. If the file exists, copy it to: `plugins/NoSaveKick/<backup-directory>/<uuid>.dat.bak`.
+2. Resolve the playerdata directory:
+   - Minecraft **26.x** (calendar versions 26.1/26.2): `<worldFolder>/players/data/`
+   - Older versions (1.21.x and earlier): `<worldFolder>/playerdata/`
+   
+   Existing directories are preferred; if neither exists yet (e.g., brand-new world with no saved players), the layout is chosen based on the running server version.
+3. Back up `<uuid>.dat` and (if present) `<uuid>.dat_old` to `plugins/NoSaveKick/<backup-directory>/`. The disconnect-save rotates the previous `.dat` into `.dat_old` (vanilla `Util.safeReplaceFile`), so both files are captured to restore the exact pre-kick pair.
 4. Kick the player.
 5. After `delay-ticks`, attempt restore/delete on a background thread:
-   - If a backup existed: overwrite `playerdata/<uuid>.dat` with the backup.
-   - If no prior file existed (brand new player): delete the newly-created file to avoid saving.
+   - If backups existed: overwrite `<uuid>.dat` and `<uuid>.dat_old` from the backups.
+   - If no prior file existed (brand new player): delete the newly-created files to avoid saving.
 6. If the restore/delete fails, retry up to `max-retries` times.
+
+> **Why 26.x needed a fix (v1.1.0-beta.2):** Minecraft 26.x moved player data from `<world>/playerdata/` to `<world>/players/data/` (with siblings `players/stats` and `players/advancements`). Builds prior to v1.1.0-beta.2 always targeted the old `playerdata/` path, which no longer exists on 26.x servers. The backup never found a file to back up, and the post-kick “restore” was a silent no-op, so kicks saved player state normally. If your 26.x server’s logs show “Deleted new playerdata file … (no prior save existed)” on every kick, you are running the broken build — update to v1.1.0-beta.2.
 
 ---
 
@@ -148,6 +154,16 @@ The core sequence is:
 Vanilla playerdata is normally stored in the server’s primary overworld folder (`level-name`). This plugin chooses the first loaded world with `Environment.NORMAL` as the best approximation.
 
 If your server uses a nonstandard setup where playerdata is stored elsewhere, you may need to adjust the code.
+
+### Storage layout by version
+
+| Server version | Player data directory |
+| --- | --- |
+| 1.20.x and earlier | `<world>/playerdata/` |
+| 1.21.x | `<world>/playerdata/` |
+| 26.1 / 26.2 (calendar versioning) | `<world>/players/data/` |
+
+The plugin auto-detects both layouts, preferring an existing directory; see “How it works (internal)”.
 
 ### “Bad save” window
 
