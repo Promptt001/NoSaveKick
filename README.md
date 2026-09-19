@@ -143,7 +143,7 @@ The core sequence is:
    - If no prior file existed (brand new player): delete the newly-created files to avoid saving.
 6. If the restore/delete fails, retry up to `max-retries` times.
 
-> **Why 26.x needed a fix (v1.1.0-beta.2 / beta.3):** Minecraft 26.x moved player data from `<world>/playerdata/` to `<world>/players/data/` (with siblings `players/stats` and `players/advancements`). Builds prior to beta.2 always targeted the old `playerdata/` path, which no longer exists on 26.x servers. beta.2 fixed the directory name but still resolved it relative to `World#getWorldFolder()`, which on 26.x returns the **per-dimension folder** (`<world>/dimensions/minecraft/overworld`) — while the server actually saves at the **level-storage root** (`<world>`). beta.3 climbs up the folder hierarchy and prefers the directory that actually contains the player’s `<uuid>.dat`. Symptom of both broken builds: “Deleted new playerdata file … (no prior save existed)” logged on every kick — update to v1.1.0-beta.3.
+> **Why 26.x needed a fix (fixed in v1.1.0):** Minecraft 26.x moved player data from `<world>/playerdata/` to `<world>/players/data/` (with siblings `players/stats` and `players/advancements`). Additionally, on 26.x `World#getWorldFolder()` returns the **per-dimension folder** (`<world>/dimensions/minecraft/overworld`) while the server actually saves at the **level-storage root** (`<world>`). The resolver now climbs up the folder hierarchy and prefers the directory that actually contains the player’s `<uuid>.dat`. Symptom of the broken pre-releases: “Deleted new playerdata file … (no prior save existed)” logged on every kick — update to v1.1.0.
 
 ---
 
@@ -161,7 +161,7 @@ If your server uses a nonstandard setup where playerdata is stored elsewhere, yo
 | --- | --- |
 | 1.20.x and earlier | `<world>/playerdata/` |
 | 1.21.x | `<world>/playerdata/` |
-| 26.1 / 26.2 (calendar versioning) | `<world>/players/data/` |
+| 26.1 / 26.2 (calendar versioning) | `<world>/players/data/` (storage root, not the per-dimension folder) |
 
 The plugin auto-detects both layouts, preferring an existing directory; see “How it works (internal)”.
 
