@@ -115,7 +115,7 @@ public final class NoSaveKick extends JavaPlugin implements CommandExecutor {
         }
 
         UUID uuid = player.getUniqueId();
-        Path playerDataDir = resolvePlayerDataDir(overworld);
+        Path playerDataDir = resolvePlayerDataDir(overworld, uuid);
         if (playerDataDir == null) {
             getLogger().severe("Could not resolve the playerdata directory; cannot roll back " + uuid + ".");
             return;
@@ -240,27 +240,48 @@ public final class NoSaveKick extends JavaPlugin implements CommandExecutor {
      * <p>Minecraft 26.x moved player data from {@code <world>/playerdata/} to
      * {@code <world>/players/data/} (with siblings {@code players/stats} and
      * {@code players/advancements}). Older versions (1.21.x and earlier) still use
-     * {@code playerdata/}. We probe both and prefer a directory that already exists;
-     * for a brand-new world with neither present we prefer the modern layout.
-     * If neither exists, we default to the modern layout.</p>
+     * {@code playerdata/}.</p>
+     *
+     * <p>Additionally, on 26.x {@link World#getWorldFolder()} returns the per-dimension
+     * folder (e.g. {@code <world>/dimensions/minecraft/overworld}) while the server's
+     * PlayerDataStorage writes at the level-storage root (e.g. {@code <world>}). The
+     * resolver therefore climbs up the folder hierarchy, preferring the directory that
+     * actually contains the player's {@code <uuid>.dat} file, falling back to the first
+     * existing directory matching the running server's layout.</p>
      *
      * @param world the "main" overworld
-     * @return the playerdata directory, or {@code null} if the world folder is unusable
+     * @param uuid the target player's UUID, used to locate the exact directory
+     * @return the playerdata directory, or {@code null} if none can be located
      */
-    private Path resolvePlayerDataDir(@NotNull World world) {
-        Path worldFolder = world.getWorldFolder().toPath();
-        Path modern = worldFolder.resolve("players").resolve("data");
-        Path legacy = worldFolder.resolve("playerdata");
-        if (Files.isDirectory(legacy)) {
-            return legacy;
-        }
-        if (Files.isDirectory(modern)) {
-            return modern;
-        }
-        // Neither exists yet (e.g., brand-new world, no players have ever saved).
-        // Prefer the layout of the running server version.
+    private Path resolvePlayerDataDir(@NotNull World world, @NotNull UUID uuid) {
+        // On Paper 26.x, World.getWorldFolder() returns the per-dimension folder
+        // (e.g. ./world/dimensions/minecraft/overworld) while the server's PlayerDataStorage
+        // lives at the level-storage root (e.g. ./world). Climb up from the world folder
+        // until we find the folder that actually holds this player's .dat file.
+        Path folder = world.getWorldFolder().toPath().toAbsolutePath().normalize();
         boolean modernServer = supportsModernPlayerDataLayout();
-        return modernServer ? modern : legacy;
+        Path fallback = null;
+        for (Path dir = folder; dir != null; dir = dir.getParent()) {
+            Path modern = dir.resolve("players").resolve("data");
+            Path legacy = dir.resolve("playerdata");
+            // Prefer the directory that actually contains this player's file.
+            if (Files.isRegularFile(modern.resolve(uuid + ".dat"))) {
+                return modern;
+            }
+            if (Files.isRegularFile(legacy.resolve(uuid + ".dat"))) {
+                return legacy;
+            }
+            // Track the first existing directory of the matching layout, in case the
+            // player's file has never been saved yet (first join before first autosave).
+            if (fallback == null) {
+                if (modernServer && Files.isDirectory(modern)) {
+                    fallback = modern;
+                } else if (!modernServer && Files.isDirectory(legacy)) {
+                    fallback = legacy;
+                }
+            }
+        }
+        return fallback;
     }
 
     /**

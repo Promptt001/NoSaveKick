@@ -143,7 +143,7 @@ The core sequence is:
    - If no prior file existed (brand new player): delete the newly-created files to avoid saving.
 6. If the restore/delete fails, retry up to `max-retries` times.
 
-> **Why 26.x needed a fix (v1.1.0-beta.2):** Minecraft 26.x moved player data from `<world>/playerdata/` to `<world>/players/data/` (with siblings `players/stats` and `players/advancements`). Builds prior to v1.1.0-beta.2 always targeted the old `playerdata/` path, which no longer exists on 26.x servers. The backup never found a file to back up, and the post-kick “restore” was a silent no-op, so kicks saved player state normally. If your 26.x server’s logs show “Deleted new playerdata file … (no prior save existed)” on every kick, you are running the broken build — update to v1.1.0-beta.2.
+> **Why 26.x needed a fix (v1.1.0-beta.2 / beta.3):** Minecraft 26.x moved player data from `<world>/playerdata/` to `<world>/players/data/` (with siblings `players/stats` and `players/advancements`). Builds prior to beta.2 always targeted the old `playerdata/` path, which no longer exists on 26.x servers. beta.2 fixed the directory name but still resolved it relative to `World#getWorldFolder()`, which on 26.x returns the **per-dimension folder** (`<world>/dimensions/minecraft/overworld`) — while the server actually saves at the **level-storage root** (`<world>`). beta.3 climbs up the folder hierarchy and prefers the directory that actually contains the player’s `<uuid>.dat`. Symptom of both broken builds: “Deleted new playerdata file … (no prior save existed)” logged on every kick — update to v1.1.0-beta.3.
 
 ---
 
