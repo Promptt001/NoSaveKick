@@ -20,9 +20,9 @@ Net effect: after the kick, the player’s vanilla `.dat` file is reverted to th
 
 ## Requirements
 
-- **Server:** Paper **26.2** (calendar versioning YY.N; API version in `plugin.yml` is `26.2`).
+- **Server:** Paper **26.2** or **26.3**. The plugin is built against the 26.2 API and declares `api-version: '26.2'` in `plugin.yml`. Paper only refuses a plugin whose declared API version is *newer* than the server's, so this one JAR loads on both.
 - **Java:** **Java 25** (project is compiled for Java 25).
-- **Build tool:** Gradle
+- **Build tool:** Gradle (use the included `./gradlew` wrapper)
 
 ---
 
@@ -43,7 +43,7 @@ On first start, the plugin will create:
 ```bash
 git clone <your repo url>
 cd NoSaveKick
-gradle build
+./gradlew build
 ```
 
 The output JAR will be in:
